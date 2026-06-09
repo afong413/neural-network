@@ -30,9 +30,11 @@ class DenseLayer(Layer):  # MARK: DenseLayer
 
         self.biases = np.zeros(n_out, dtype=np.float64)
 
-        self.d_weights = np.zeros((n_out, n_in), dtype=np.longdouble)
+        self.v_weights = np.zeros((n_out, n_in), dtype=np.float64)
+        self.d_weights = np.zeros((n_out, n_in), dtype=np.float64)
 
-        self.d_biases = np.zeros(n_out, dtype=np.longdouble)
+        self.v_biases = np.zeros(n_out, dtype=np.float64)
+        self.d_biases = np.zeros(n_out, dtype=np.float64)
 
     def __call__(self, v_in: np.ndarray):
         """
@@ -73,12 +75,11 @@ class DenseLayer(Layer):  # MARK: DenseLayer
         # Not quite sure why I can't just use -= for the below, but
         # numpy kept throwing an error.
 
-        self.weights = (
-            self.weights - (self.learning_rate / batch_size) * self.d_weights
-        )
-        self.biases = (
-            self.biases - (self.learning_rate / batch_size) * self.d_biases
-        )
-        
-        self.d_weights *= self.momentum
-        self.d_biases *= self.momentum
+        self.v_weights = self.momentum * self.v_weights - (self.learning_rate / batch_size) * self.d_weights
+        self.v_biases = self.momentum * self.v_biases - (self.learning_rate / batch_size) * self.d_biases
+
+        self.weights += self.v_weights
+        self.biases += self.v_biases
+
+        self.d_weights[:] = 0
+        self.d_biases[:] = 0
