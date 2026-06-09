@@ -27,17 +27,21 @@ for name in tqdm(sample_names, desc='Reading data...'):
 
 # MARK: Split Data
 
-training_images = []
-training_labels = []
-testing_images = []
-testing_labels = []
+training_images_parts, training_labels_parts = [], []
+testing_images_parts, testing_labels_parts = [], []
 
 for i in tqdm(range(len(samples)), desc='Splitting data...'):
     np.random.shuffle(samples[i])
-    testing_images += list(samples[i][: len(samples[i]) // 10] / 255)
-    testing_labels += np.full(len(samples[i]) // 10, i).tolist()
-    training_images += list(samples[i][len(samples[i]) // 10 :] / 255)
-    training_labels += np.full(len(samples[i]) - (len(samples[i]) // 10), i).tolist()
+    split = len(samples[i]) // 10
+    testing_images_parts.append(samples[i][:split] / 255)
+    testing_labels_parts.append(np.full(split, i))
+    training_images_parts.append(samples[i][split:] / 255)
+    training_labels_parts.append(np.full(len(samples[i]) - split, i))
+
+training_images = np.vstack(training_images_parts)
+training_labels = np.concatenate(training_labels_parts)
+testing_images = np.vstack(testing_images_parts)
+testing_labels = np.concatenate(testing_labels_parts)
 
 # MARK: Functions
 
@@ -66,11 +70,13 @@ softmax_cross_entropy = CalcFunction(
     lambda v_out, expected_v_out: softmax(v_out) - expected_v_out,
 )
 
+IMAGE_SIZE = 28 * 28
+
 # MARK: Network
 
 network = Network(
     [
-        DenseLayer(784, 32, 0.05, 0.8, sigmoid, xavier),
+        DenseLayer(IMAGE_SIZE, 32, 0.05, 0.8, sigmoid, xavier),
         DenseLayer(32, num_sample_types, 0.05, 0.8, linear, xavier),
     ],
     softmax_cross_entropy,
@@ -89,14 +95,14 @@ for i in (bar := tqdm(range(n_epochs), desc='Training...')):
 
     for j in tqdm(range(epoch_size // batch_size), desc=f'Epoch {i + 1}...', leave=False):
         batch = shuffle[batch_size * j : batch_size * (j + 1)]
-        images = np.array([training_images[k] for k in batch])
-        labels = np.array([training_labels[k] for k in batch])
+        images = training_images[batch]
+        labels = training_labels[batch]
 
         expected_v_out = np.zeros((batch_size, num_sample_types))
         expected_v_out[np.arange(batch_size), labels] = 1
 
         v_out = network(images)
-        network.backprop(expected_v_out)
+        network.backprop(v_out, expected_v_out)
 
         correct = np.sum(np.argmax(v_out, axis=1) == labels)
 
