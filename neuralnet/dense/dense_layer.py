@@ -1,10 +1,9 @@
-from collections.abc import Callable, Sequence
-from typing import Any
+from collections.abc import Callable
 
 import numpy as np
 
-from neuralnet.layer import Layer
 from neuralnet.calculus import CalcFunction
+from neuralnet.layer import Layer
 
 
 class DenseLayer(Layer):  # MARK: DenseLayer
@@ -19,9 +18,7 @@ class DenseLayer(Layer):  # MARK: DenseLayer
         learning_rate: float,
         momentum: float,
         activation_function: CalcFunction,
-        weight_initialization_function: Callable[
-            [int, int], np.ndarray[Any, float]
-        ],
+        weight_initialization_function: Callable[[int, int], np.ndarray],
     ):
         super().__init__(n_in, n_out)
 
@@ -29,35 +26,29 @@ class DenseLayer(Layer):  # MARK: DenseLayer
         self.momentum = momentum
         self.activation_function = activation_function
 
-        self.weights = np.array(
-            weight_initialization_function(n_in, n_out), dtype=np.longdouble
-        )
+        self.weights = np.array(weight_initialization_function(n_in, n_out), dtype=np.float64)
 
-        self.biases = np.zeros(n_out, dtype=np.longdouble)
+        self.biases = np.zeros(n_out, dtype=np.float64)
 
         self.d_weights = np.zeros((n_out, n_in), dtype=np.longdouble)
 
         self.d_biases = np.zeros(n_out, dtype=np.longdouble)
 
-    def __call__(self, v_in: Sequence):
+    def __call__(self, v_in: np.ndarray):
         """
         Propagate the layer with the given input, `v_in`.
         """
-        self.v_in = np.array(v_in, dtype=np.longdouble)
+        self.v_in = np.array(v_in, dtype=np.float64)
 
-        self.preactivation = (
-            self.weights @ self.v_in
-        )  # The @ represents matrix multiplication.
+        self.preactivation = self.weights @ self.v_in + self.biases  # The @ represents matrix multiplication.
 
         return self.activation_function(self.preactivation)
 
-    def backprop(self, d_out: Sequence):
+    def backprop(self, d_out: np.ndarray):
         """
         Backpropagate the layer without yet updating the parameters.
         """
-        d_out = np.array(
-            d_out, dtype=np.longdouble
-        )  # Don't want any pesky lists messing things up!
+        d_out = np.array(d_out, dtype=np.float64)  # Don't want any pesky lists messing things up!
 
         # This is just calculus bash and matrices:
 

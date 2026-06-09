@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
+
+from pathlib import Path
+
 import numpy as np  # Not turtle
 from tqdm import tqdm  # Progress bars
-from neuralnet import Network, CalcFunction
+
+from neuralnet import CalcFunction, Network
 from neuralnet.dense import DenseLayer
 from sample_names import sample_names
 
@@ -15,15 +19,11 @@ num_sample_types = len(sample_names)
 
 samples = []
 
-for name in tqdm(sample_names, desc="Reading data..."):
+for name in tqdm(sample_names, desc='Reading data...'):
     try:
-        samples.append(
-            np.load(
-                "samples//" + str(name.replace(" ", "_")) + ".npy",
-            )
-        )
+        samples.append(np.load(Path('samples', str(name.replace(' ', '_')) + '.npy')))
     except FileNotFoundError:
-        raise FileNotFoundError("Please run ./get_samples.sh.")
+        raise FileNotFoundError('Please run ./get_samples.sh.')
 
 # MARK: Split Data
 
@@ -32,14 +32,12 @@ training_labels = []
 testing_images = []
 testing_labels = []
 
-for i in tqdm(range(len(samples)), desc="Splitting data..."):
+for i in tqdm(range(len(samples)), desc='Splitting data...'):
     np.random.shuffle(samples[i])
     testing_images += list(samples[i][: len(samples[i]) // 10] / 255)
     testing_labels += np.full(len(samples[i]) // 10, i).tolist()
     training_images += list(samples[i][len(samples[i]) // 10 :] / 255)
-    training_labels += np.full(
-        len(samples[i]) - (len(samples[i]) // 10), i
-    ).tolist()
+    training_labels += np.full(len(samples[i]) - (len(samples[i]) // 10), i).tolist()
 
 # MARK: Functions
 
@@ -48,13 +46,14 @@ sigmoid = CalcFunction(
     lambda x: (ex := np.exp(-x)) / ((1 + ex) ** 2),
 )
 
-xavier = lambda n_in, n_out: np.random.normal(
-    0, np.sqrt(2 / (n_in + n_out)), (n_out, n_in)
-)
+
+def xavier(n_in: int, n_out: int):
+    return np.random.normal(0, np.sqrt(2 / (n_in + n_out)), (n_out, n_in))
+
 
 squared_error = CalcFunction(
-    np.vectorize(lambda v_out, expected_v_out: (v_out - expected_v_out) ** 2),
-    np.vectorize(lambda v_out, expected_v_out: 2 * (v_out - expected_v_out)),
+    lambda v_out, expected_v_out: (v_out - expected_v_out) ** 2,
+    lambda v_out, expected_v_out: 2 * (v_out - expected_v_out),
 )
 
 # MARK: Network
@@ -75,13 +74,10 @@ batch_size = 10000  # SETTING: The size of each batch.
 
 shuffle = list(range(epoch_size))
 
-for i in (bar := tqdm(range(n_epochs), desc="Training...")):
+for i in (bar := tqdm(range(n_epochs), desc='Training...')):
     np.random.shuffle(shuffle)
-    l = 0
 
-    for j in tqdm(
-        range(epoch_size // batch_size), desc=f"Epoch {i + 1}...", leave=False
-    ):
+    for j in tqdm(range(epoch_size // batch_size), desc=f'Epoch {i + 1}...', leave=False):
         correct = 0
         for k in tqdm(range(batch_size), leave=False):
             v_out = network(training_images[shuffle[batch_size * j + k]])
@@ -91,17 +87,10 @@ for i in (bar := tqdm(range(n_epochs), desc="Training...")):
 
             network.backprop(expected_v_out)
 
-            l += 1
-
-            if (
-                np.argmax(v_out)
-                == training_labels[shuffle[batch_size * j + k]]
-            ):
+            if np.argmax(v_out) == training_labels[shuffle[batch_size * j + k]]:
                 correct += 1
 
-        bar.set_description(
-            f"Training... (Acc: {round(100 * correct / batch_size, 2)}%)"
-        )
+        bar.set_description(f'Training... (Acc: {round(100 * correct / batch_size, 2)}%)')
 
         network.update(batch_size)
 
@@ -112,9 +101,9 @@ test_size = 10000  # SETTING: How many tests to do.
 test = np.random.choice(len(testing_images), test_size)
 
 correct = 0
-for i in tqdm(test, desc="Testing..."):
+for i in tqdm(test, desc='Testing...'):
     v_out = network(testing_images[i])
     if np.argmax(v_out) == testing_labels[i]:
         correct += 1
 
-print(f"Accuracy: {round(100 * correct / test_size, 2)}%")
+print(f'Accuracy: {round(100 * correct / test_size, 2)}%')

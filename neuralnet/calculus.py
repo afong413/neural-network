@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 
-class CalcFunction(Callable):  # MARK: CalcFunction
+class CalcFunction:  # MARK: CalcFunction
     """
     A function with a derivative. I stopped using `sympy` because of
     functions like ReLU (`max(x,0)`) that it couldn't differentiate.

@@ -1,13 +1,12 @@
-from collections.abc import Callable, Sequence, MutableSequence
 import copy
 
 import numpy as np
 
-from .layer import Layer
 from .calculus import CalcFunction
+from .layer import Layer
 
 
-class Network(Callable, MutableSequence):  # MARK: Network
+class Network:  # MARK: Network
     """
     A neural network.
     """
@@ -16,7 +15,7 @@ class Network(Callable, MutableSequence):  # MARK: Network
         self.layers = layers
         self.cost_function = cost_function
 
-    def __call__(self, v_in: Sequence[float]) -> Sequence[float]:
+    def __call__(self, v_in: np.ndarray) -> np.ndarray:
         """
         Propagate the network with the given input, `v_in`.
         """
@@ -27,7 +26,7 @@ class Network(Callable, MutableSequence):  # MARK: Network
 
         return self.v_out
 
-    def backprop(self, expected_v_out: Sequence[float]):
+    def backprop(self, expected_v_out: np.ndarray):
         """
         Backpropagate the network given the desired output, `expected_v_out`.
         """
@@ -44,20 +43,5 @@ class Network(Callable, MutableSequence):  # MARK: Network
 
     # Most of these are to conform to MutableSequence:
 
-    def __add__(self, other: "Network"):
-        return Network(copy.deepcopy(self.layers + other.layers))
-
-    def __getitem__(self, *args, **kwargs):
-        return self.layers.__getitem__(*args, **kwargs)
-
-    def __setitem__(self, *args, **kwargs):
-        return self.layers.__setitem__(*args, **kwargs)
-
-    def __delitem__(self, *args, **kwargs):
-        return self.layers.__delitem__(*args, **kwargs)
-
-    def __len__(self, *args, **kwargs):
-        return self.layers.__len__(*args, **kwargs)
-
-    def insert(self, *args, **kwargs):
-        return self.layers.insert(*args, **kwargs)
+    def __add__(self, other: 'Network'):
+        return Network(copy.deepcopy(self.layers + other.layers), other.cost_function)
