@@ -46,14 +46,24 @@ sigmoid = CalcFunction(
     lambda x: (ex := np.exp(-x)) / ((1 + ex) ** 2),
 )
 
+linear = CalcFunction(
+    lambda x: x,
+    lambda x: np.ones_like(x),
+)
+
 
 def xavier(n_in: int, n_out: int):
     return np.random.normal(0, np.sqrt(2 / (n_in + n_out)), (n_out, n_in))
 
 
-squared_error = CalcFunction(
-    lambda v_out, expected_v_out: (v_out - expected_v_out) ** 2,
-    lambda v_out, expected_v_out: 2 * (v_out - expected_v_out),
+def softmax(x):
+    e = np.exp(x - np.max(x))  # subtract max for numerical stability
+    return e / e.sum()
+
+
+softmax_cross_entropy = CalcFunction(
+    lambda v_out, expected_v_out: -np.sum(expected_v_out * np.log(softmax(v_out) + 1e-9)),
+    lambda v_out, expected_v_out: softmax(v_out) - expected_v_out,
 )
 
 # MARK: Network
@@ -61,9 +71,9 @@ squared_error = CalcFunction(
 network = Network(
     [
         DenseLayer(784, 32, 0.05, 0.8, sigmoid, xavier),
-        DenseLayer(32, num_sample_types, 0.05, 0.8, sigmoid, xavier),
+        DenseLayer(32, num_sample_types, 0.05, 0.8, linear, xavier),
     ],
-    squared_error,
+    softmax_cross_entropy,
 )
 
 # MARK: Training
