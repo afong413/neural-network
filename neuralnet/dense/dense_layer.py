@@ -42,7 +42,7 @@ class DenseLayer(Layer):  # MARK: DenseLayer
         """
         self.v_in = np.array(v_in, dtype=np.float64)
 
-        self.preactivation = self.weights @ self.v_in + self.biases  # The @ represents matrix multiplication.
+        self.preactivation = self.v_in @ self.weights.T + self.biases  # The @ represents matrix multiplication.
 
         return self.activation_function(self.preactivation)
 
@@ -56,11 +56,11 @@ class DenseLayer(Layer):  # MARK: DenseLayer
 
         dCdZ = d_out * self.activation_function.d(self.preactivation)
 
-        self.d_weights += dCdZ[:, None] @ self.v_in[None, :]
+        self.d_weights += dCdZ.T @ self.v_in
 
-        self.d_biases += dCdZ
+        self.d_biases += dCdZ.sum(axis=0)
 
-        return self.weights.T @ dCdZ
+        return dCdZ @ self.weights
 
     def update(self, batch_size: int):
         """

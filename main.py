@@ -57,8 +57,8 @@ def xavier(n_in: int, n_out: int):
 
 
 def softmax(x):
-    e = np.exp(x - np.max(x))  # subtract max for numerical stability
-    return e / e.sum()
+    e = np.exp(x - np.max(x, axis=-1, keepdims=True))  # subtract max for numerical stability
+    return e / e.sum(axis=-1, keepdims=True)
 
 
 softmax_cross_entropy = CalcFunction(
@@ -88,17 +88,17 @@ for i in (bar := tqdm(range(n_epochs), desc='Training...')):
     np.random.shuffle(shuffle)
 
     for j in tqdm(range(epoch_size // batch_size), desc=f'Epoch {i + 1}...', leave=False):
-        correct = 0
-        for k in tqdm(range(batch_size), leave=False):
-            v_out = network(training_images[shuffle[batch_size * j + k]])
+        batch = shuffle[batch_size * j : batch_size * (j + 1)]
+        images = np.array([training_images[k] for k in batch])
+        labels = np.array([training_labels[k] for k in batch])
 
-            expected_v_out = np.zeros(num_sample_types)
-            expected_v_out[training_labels[shuffle[batch_size * j + k]]] = 1
+        expected_v_out = np.zeros((batch_size, num_sample_types))
+        expected_v_out[np.arange(batch_size), labels] = 1
 
-            network.backprop(expected_v_out)
+        v_out = network(images)
+        network.backprop(expected_v_out)
 
-            if np.argmax(v_out) == training_labels[shuffle[batch_size * j + k]]:
-                correct += 1
+        correct = np.sum(np.argmax(v_out, axis=1) == labels)
 
         bar.set_description(f'Training... (Acc: {round(100 * correct / batch_size, 2)}%)')
 
