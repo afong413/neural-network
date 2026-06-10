@@ -43,3 +43,20 @@ class Network:  # MARK: Network
 
     def __add__(self, other: 'Network'):
         return Network(copy.deepcopy(self.layers + other.layers), other.cost_function)
+
+    def save(self, path):
+        """
+        Save the network to the specified path.
+        """
+        arrays = {}
+        for i, layer in enumerate(self.layers):
+            layer.save(arrays, f'layer_{i}')
+        np.savez(path, **arrays)
+
+    def load(self, path):
+        """
+        Load the network from the specified path.
+        """
+        with np.load(path) as arrays:
+            for i, layer in enumerate(self.layers):
+                layer.load(arrays, f'layer_{i}')

@@ -83,3 +83,16 @@ class DenseLayer(Layer):  # MARK: DenseLayer
 
         self.d_weights[:] = 0
         self.d_biases[:] = 0
+
+    def save(self, arrays: dict, prefix: str):
+        arrays[f'{prefix}_weights'] = self.weights
+        arrays[f'{prefix}_biases'] = self.biases
+
+    def load(self, arrays: dict, prefix: str):
+        self.weights = arrays[f'{prefix}_weights']
+        self.biases = arrays[f'{prefix}_biases']
+
+        self.v_weights[:] = 0
+        self.v_biases[:] = 0
+        self.d_weights[:] = 0
+        self.d_biases[:] = 0

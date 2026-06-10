@@ -29,3 +29,15 @@ class Layer(ABC):  # MARK: Layer
         Update the neural network after a batch has completed.
         """
         pass
+
+    def save(self, arrays: dict, prefix: str):
+        """
+        Save the layer to `arrays`.
+        """
+        pass
+
+    def load(self, arrays: dict, prefix: str):
+        """
+        Load the layer from its entries in `arrays`.
+        """
+        pass

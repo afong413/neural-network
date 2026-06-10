@@ -123,3 +123,7 @@ for i in tqdm(test, desc='Testing...'):
         correct += 1
 
 print(f'Accuracy: {round(100 * correct / test_size, 2)}%')
+
+Path('save').mkdir(exist_ok=True)
+network.save('save/network.npz')
+print('Saved to "save/network.npz"')

@@ -1,6 +1,7 @@
 .venv/
 __pycache__/
 samples/
+save/
 
 # Mac OS
 .DS_Store
