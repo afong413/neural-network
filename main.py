@@ -13,6 +13,8 @@ from sample_names import sample_names
 # SETTING: In sample_names.py (not sample_names.txt), comment/uncomment
 # the types of images you want/don't want.
 
+IMAGE_SIZE = 28 * 28
+
 # MARK: Get Samples
 
 num_sample_types = len(sample_names)
@@ -21,7 +23,7 @@ samples = []
 
 for name in tqdm(sample_names, desc='Reading data...'):
     try:
-        samples.append(np.load(Path('samples', str(name.replace(' ', '_')) + '.npy')))
+        samples.append(np.load(Path('samples', name.replace(' ', '_') + '.npy')))
     except FileNotFoundError:
         raise FileNotFoundError('Please run ./get_samples.sh.')
 
@@ -70,8 +72,6 @@ softmax_cross_entropy = CalcFunction(
     lambda v_out, expected_v_out: softmax(v_out) - expected_v_out,
 )
 
-IMAGE_SIZE = 28 * 28
-
 # MARK: Network
 
 network = Network(
@@ -88,7 +88,7 @@ n_epochs = 10  # SETTING: How many times the model sees each sample.
 epoch_size = len(training_images)
 batch_size = 10000  # SETTING: The size of each batch.
 
-shuffle = list(range(epoch_size))
+shuffle = np.arange(epoch_size)
 
 for i in (bar := tqdm(range(n_epochs), desc='Training...')):
     np.random.shuffle(shuffle)
